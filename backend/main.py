@@ -1,28 +1,34 @@
+# backend/main.py
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from gemini import get_gemini_reply
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(title="Gemini Chatbot API")
 
+# Allow your frontend to access the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # replace "*" with your frontend URL in production
+    allow_origins=["*"],  # You can restrict to your frontend domain
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Request model
 class ChatRequest(BaseModel):
     message: str
 
 @app.get("/")
-def root():
-    return {"message": "Welcome to Gemini Chatbot API!"}
+async def root():
+    return {"status": "Server is running"}
 
 @app.post("/chat")
-def chat(request: ChatRequest):
+async def chat_endpoint(payload: ChatRequest):
+    user_message = payload.message
     try:
-        reply = get_gemini_reply(request.message)
+        reply = get_gemini_reply(user_message)
         return {"reply": reply}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return a proper JSON error
+        return {"reply": f"❌ Gemini error: {str(e)}"}
