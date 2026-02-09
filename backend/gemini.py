@@ -1,30 +1,28 @@
+# backend/gemini.py
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+import requests
 
-# Load environment variables
 load_dotenv()
-
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
-if not API_KEY:
-    raise RuntimeError("GOOGLE_API_KEY not found in environment variables")
+# Use a valid Gemini model
+MODEL_NAME = "models/gemini-2.5-flash"
 
-# Configure Gemini once
-genai.configure(api_key=API_KEY)
+BASE_URL = f"https://generativelanguage.googleapis.com/v1/{MODEL_NAME}:generateContent?key={API_KEY}"
 
-# Use supported model
-model = genai.GenerativeModel("gemini-2.5-flash")
+def get_gemini_reply(user_input: str) -> str:
+    payload = {
+        "contents": [
+            {"parts": [{"text": user_input}]}
+        ]
+    }
 
-def get_gemini_reply(message: str) -> str:
-    try:
-        response = model.generate_content(message)
+    response = requests.post(BASE_URL, json=payload)
+    data = response.json()
 
-        if not response or not response.text:
-            return "⚠️ I didn't get a response from Gemini."
-
-        return response.text.strip()
-
-    except Exception as e:
-        # Never crash FastAPI
-        return f"❌ Gemini error: {str(e)}"
+    if "candidates" in data:
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        # Return the error JSON as string for debugging
+        raise Exception(data)
