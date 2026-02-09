@@ -14,7 +14,7 @@ if not API_KEY:
 genai.configure(api_key=API_KEY)
 
 # Use supported model
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 def get_gemini_reply(message: str) -> str:
     try:
