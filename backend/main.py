@@ -1,17 +1,17 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from gemini import get_gemini_reply
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+class ChatRequest(BaseModel):
+    message: str
+
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "Gemini chatbot backend running"}
 
 @app.post("/chat")
-async def chat(data: dict):
-    reply = get_gemini_reply(data["message"])
+def chat(req: ChatRequest):
+    reply = get_gemini_reply(req.message)
     return {"reply": reply}
